@@ -1,57 +1,59 @@
 version: '3.8'
 
 services:
-  user_managment_service:
-    image: akayti/server:v1
-    container_name: api_gateway_nginx
+  api_server:
+    image: 'nginx:stable-alpine'
+    build:
+      context: .
+      dockerfile: dockerfiles/nginx.dockerfile
+    container_name: api_server
     ports:
       - '8000:80'
     volumes:
-      - ./src:/var/www/html:ro
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - php
+      - ./src:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
-      - shared_network
+      - api_network
 
-  php:
-    image: akayti/php:v1
-    container_name: api_gateway
+  php_api:
+    build:
+      context: .
+      dockerfile: dockerfiles/php.dockerfile
+    container_name: api_laravel
     volumes:
       - ./src:/var/www/html:delegated
     networks:
-      - shared_network
+      - api_network
 
-  composer: 
-    image: akayti/composer:v1
+  composer_api: 
+    build:
+      context: ./dockerfiles
+      dockerfile: composer.dockerfile
     volumes:
       - ./src:/var/www/html
     networks:
-      - shared_network
-    depends_on:
-      - php
+      - api_network
 
-  artisan:
-    image: akayti/php:v1
+  artisan_api:
+    build:
+      context: .
+      dockerfile: dockerfiles/php.dockerfile
     volumes:
       - ./src:/var/www/html
     entrypoint: ['php', '/var/www/html/artisan']
     networks:
-      - shared_network
-    depends_on:
-      - php
+      - api_network
 
-  npm:
+  npm_api:
     image: node:14
     working_dir: /var/www/html
     command: ['npm', 'install']
     volumes:
       - ./src:/var/www/html
     networks:
-      - shared_network
-    depends_on:
-      - php
+      - api_network
 
 networks:
-  shared_network:
+  api_network:
     external: true
+    driver: bridge

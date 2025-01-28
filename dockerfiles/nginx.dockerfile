@@ -5,13 +5,11 @@ FROM nginx:stable-alpine
 WORKDIR /etc/nginx/conf.d
 
 # Copy your custom Nginx configuration file to the container
-COPY nginx/nginx.conf .
+COPY nginx/default.conf .
 
 #Rename the copied file to default
-RUN mv nginx.conf default.conf
+RUN mv default.conf default.conf
 
-# Expose port 80 to the outside world
-EXPOSE 80
+WORKDIR /var/www/html
 
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+COPY src .

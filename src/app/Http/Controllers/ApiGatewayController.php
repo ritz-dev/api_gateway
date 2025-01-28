@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Http;
 class ApiGatewayController extends Controller
 {
     protected $services = [
-        'user-management' => 'http://auth_nginx:80/api',
-        'academic' => 'http://academic_nginx:80/api'
+        'user-management' => 'http://user_server:80/api',
+        'academic' => 'http://academic_server:80/api'
     ];
 
     public function handleUserManagementService(Request $request, $endpoint)
