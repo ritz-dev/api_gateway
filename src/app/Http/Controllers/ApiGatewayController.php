@@ -9,7 +9,8 @@ class ApiGatewayController extends Controller
 {
     protected $services = [
         'user-management' => 'http://user_server/api',
-        'academic' => 'http://academic_server/api'
+        'academic' => 'http://academic_server/api',
+        'finance'=> 'http://finance_server/api',
     ];
 
     public function handleUserManagementService(Request $request, $endpoint)
@@ -20,6 +21,11 @@ class ApiGatewayController extends Controller
     public function handleAcademicService(Request $request, $endpoint)
     {
         return $this->forwardRequest('academic', $endpoint, $request);
+    }
+
+    public function handleFinanceService(Request $request, $endpoint)
+    {
+        return $this->forwardRequest('finance', $endpoint, $request);
     }
 
     private function forwardRequest($serviceKey, $endpoint, Request $request)

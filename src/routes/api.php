@@ -22,6 +22,10 @@ Route::post('/login',[AuthController::class,'login']);
 
 Route::post('/register',[AuthController::class,'register']);
 
+Route::prefix('finance')->group(function () {
+    Route::any('{endpoint}', [ApiGatewayController::class, 'handleFinanceService'])->where('endpoint', '.*');
+});
+
 Route::middleware('auth:employee')->group(function(){
 
     Route::prefix('user-management')->group(function () {
@@ -30,7 +34,7 @@ Route::middleware('auth:employee')->group(function(){
 
     Route::prefix('academic')->group(function () {
         Route::any('{endpoint}', [ApiGatewayController::class, 'handleAcademicService'])->where('endpoint', '.*');
-    });
+    }); 
 
     Route::post('/logout',[AuthController::class,'logout']);
 
