@@ -32,10 +32,6 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             RoleSeeder::class,
             RolePermissionSeeder::class,
-            PersonalSeeder::class,
-            EmployeeSeeder::class,
-            StudentSeeder::class,
-            TeacherSeeder::class,
         ]);
     }
 }
