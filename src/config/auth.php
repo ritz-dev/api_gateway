@@ -44,10 +44,10 @@ return [
           'driver' => 'passport',
           'provider' => 'users',
         ],
-        'employee' => [
-            'driver' => 'passport',
-            'provider' => 'employees',
-        ],
+        // 'employee' => [
+        //     'driver' => 'passport',
+        //     'provider' => 'employees',
+        // ],
     ],
 
     /*
@@ -70,13 +70,13 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\Employee::class),
+            'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 
-        'employees' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\Employee::class,
-        ],
+        // 'employees' => [
+        //     'driver' => 'eloquent',
+        //     'model' => App\Models\Employee::class,
+        // ],
 
         // 'users' => [
         //     'driver' => 'database',

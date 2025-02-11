@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Role;
 use App\Models\User;
-use App\Models\Employee;
 use App\Models\Permission;
 use Illuminate\Http\Request;
 use App\Models\RolePermission;
@@ -15,73 +14,119 @@ use Illuminate\Support\Facades\Http;
 class AuthController extends Controller
 {
 
-    public function login(Request $request)
-    {
-        $userManagementServiceUrl = config('services.user_management.url') . '/login';
+    public function register(Request $request){
 
-        $response = Http::withHeaders([
-            'Accept' => 'application/json',
-        ])->post($userManagementServiceUrl, [
-            'email' => $request->input('email'),
-            'password' => $request->input('password'),
+        $registeredData = $request->validate([
+            'name' => 'required|string',
+            'email' => 'email|required|string|unique:users',
+            'password' => 'required|confirmed'
         ]);
 
-        return response()->json(json_decode($response->getBody(), true), $response->getStatusCode());
+        $user = User::create([
+            "name" => $request->name,
+            "email" => $request->email,
+            "password" => Hash::make($request->password),
+            "role_id" => $request->role_id
+        ]);
+
+        $token = $user->createToken('SMS')->accessToken;
+
+        return response()->json([
+            "status" => true,
+            "message" => "Successfully",
+            "token" => $token,
+            "data" => []
+        ]);
     }
 
-    // public function register(Request $request){
+    public function login(Request $request)
+    {
+        $credentials = [
+            'email'    => $request->email,
+            'password' => $request->password
+        ];
 
-    //     $registeredData = $request->validate([
-    //         'name' => 'required|string',
-    //         'email' => 'email|required|string|unique:employees',
-    //         'password' => 'required|confirmed'
-    //     ]);
+        $user = User::where('email', $request->email)->first();
+        if ($user && Hash::check($request->password, $user->password)) {
+            $token = $user->createToken('SMS')->accessToken;
 
-    //     $user = Employee::create([
-    //         "name" => $request->name,
-    //         "email" => $request->email,
-    //         "password" => Hash::make($request->password),
-    //         "role_id" => $request->role_id
-    //     ]);
 
-    //     $token = $user->createToken('passportToken')->accessToken;
+            $role = Role::where('id',$user->role_id)->pluck('name')->first();
+            $role_permissions = RolePermission::where('role_id',$user->role_id)->get();
 
-    //     return response()->json([
-    //         "status" => true,
-    //         "message" => "Successfully",
-    //         "token" => $token,
-    //         "data" => []
-    //     ]);
-    // }
+            $permission = [];
 
-    public function logout(Request $request){
-        $token = $request->header('Authorization');
-        $userManagementServiceUrl = config('services.user_management.url') . '/logout';
+            foreach($role_permissions as $role_permission){
+                $permission [] = Permission::where('id',$role_permission->permission_id)->pluck('name')->first();
+            }
+            return response()->json([
+                'status' => 'success',
+                'token' => $token,
+                'token_type' => 'bearer',
+                'admin' => $user,
+                'permissions' => $permission,
+                'role' => $role
+            ]);
+        }
 
-        $response = Http::withHeaders([
-            'Accept' => 'application/json',
-            'Authorization' => $token,
-        ])->post($userManagementServiceUrl, []);
+        // If no user or admin matches, return an error
+        return response()->json(['error' => 'Unauthorized'], 401);
 
-        return response()->json(json_decode($response->getBody(), true), $response->getStatusCode());
+    }
+
+    public function logout(){
+        $user = auth()->guard('api')->user();
+
+        if ($user) {
+            // Revoke the user's token if Passport is used
+            $user->tokens->each(function ($token) {
+                $token->delete();
+            });
+
+            return response()->json([
+                'message' => "Logout Successfully",
+            ]);
+        }
+
+        return response()->json([
+            'message' => "User not logged in",
+        ]);
     }
 
     public function me (Request $request) {
-        $token = $request->header('Authorization');
-        $userManagementServiceUrl = config('services.user_management.url') . '/me';
 
-        $response = Http::withHeaders([
-            'Accept' => 'application/json',
-            'Authorization' => $token,
-        ])->get($userManagementServiceUrl);
-        return response()->json(json_decode($response->getBody(), true), $response->getStatusCode());
-    }
+        $user = auth()->guard('api')->user();
 
-    public function validateToken(Request $request) {
-        try{
-            return response()->json(['message' => 'Token is Validate'],200);
-        } catch (\Exception $e) { 
-            return response()->json(['error' => 'Something Wrong..'], 503); 
-        } 
+        $name = $user->name;
+
+        $role = Role::where('id',$user->role_id)->pluck('name')->first();
+
+        $role_permissions = RolePermission::where('role_id',$user->role_id)->get();
+
+        $permissionIds = [];
+
+        foreach($role_permissions as $role_permission){
+            $permissionIds[] = $role_permission->permission_id;
+        }
+
+        $permission = [];
+
+        foreach($permissionIds as $permissionId){
+            $permission[] = Permission::where('id',$permissionId)->pluck('name')->first();
+        }
+
+        $data = [
+            'id' => $user->id,
+            'name' => $name,
+            'email' => $user->email,
+            'role' => $role,
+            'permissions' => $permission,
+        ];
+
+        if(!$data) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        return response()->json($data);
     }
 }

@@ -26,7 +26,7 @@ Route::prefix('finance')->group(function () {
     Route::any('{endpoint}', [ApiGatewayController::class, 'handleFinanceService'])->where('endpoint', '.*');
 });
 
-Route::middleware('auth:employee')->group(function(){
+Route::middleware('auth:api')->group(function(){
 
     Route::prefix('user-management')->group(function () {
         Route::any('{endpoint}', [ApiGatewayController::class, 'handleUserManagementService'])->where('endpoint', '.*');
@@ -34,26 +34,12 @@ Route::middleware('auth:employee')->group(function(){
 
     Route::prefix('academic')->group(function () {
         Route::any('{endpoint}', [ApiGatewayController::class, 'handleAcademicService'])->where('endpoint', '.*');
-    }); 
+    });
 
     Route::post('/logout',[AuthController::class,'logout']);
 
     Route::get('/me',[AuthController::class,'me']);
 
     Route::get('/validate-token', [AuthController::class,'validateToken']);
-
-//     Route::resource('/users',EmployeeController::class);
-
-//     Route::resource('/permissions',PermissionController::class);
-
-//     Route::resource('/roles',RoleController::class);
-
-//     Route::resource('/personals',PersonalController::class);
-
-//     Route::resource('/employees',EmployeeController::class);
-
-//     Route::resource('/students',StudentController::class);
-
-//     Route::resource('/teachers',TeacherController::class);
 
 });
